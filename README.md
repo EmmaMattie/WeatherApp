@@ -39,7 +39,7 @@ A simple Android weather app built using **Kotlin**. It shows current and upcomi
   - Humidity
 
 
-## Tech Used
+## Technology Used
 
 - **Kotlin** – Main programming language
 - **ViewModel** – Manages app data for each screen
