@@ -187,7 +187,7 @@ fun NowScreen() {
 
             Spacer(Modifier.height(16.dp))
 
-            // Surface container for weather details (wind, humidity, etc.)
+            // Surface container for weather details
             Surface(
                 modifier = Modifier.padding(4.dp),
                 color = Color.Gray,
@@ -202,11 +202,11 @@ fun NowScreen() {
                     ) {
                         Column {
                             Text("Wind Direction", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            Text("North", fontSize = 22.sp, color = Color.White)
+                            Text("North", fontSize = 23.sp, color = Color.White)
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text("Wind Speed", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            Text("3 km/h", fontSize = 22.sp, color = Color.White)
+                            Text("3 km/h", fontSize = 23.sp, color = Color.White)
                         }
                     }
 
@@ -219,11 +219,11 @@ fun NowScreen() {
                     ) {
                         Column {
                             Text("Humidity", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            Text("5%", fontSize = 22.sp, color = Color.White)
+                            Text("40%", fontSize = 23.sp, color = Color.White)
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text("Precipitation", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            Text("None", fontSize = 22.sp, color = Color.White)
+                            Text("None", fontSize = 23.sp, color = Color.White)
                         }
                     }
 
@@ -235,7 +235,7 @@ fun NowScreen() {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Chance of Rain", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("Chance of Precipitation", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color.White)
                             Text("0%", fontSize = 22.sp, color = Color.White)
                         }
 
@@ -250,33 +250,35 @@ fun NowScreen() {
 
 @Composable
 fun DailyScreen() {
-    // List of forecast items for different days
+    // List of forecast items with weather data
     val items = listOf(
-        ForecastItem("Fri May 2", "3°", "0°", "Wind: 29 km/h", "Humidity: 65%", R.drawable.rainy, "Rainy", "Rain", "11 mm", "90%", "North"),
-        ForecastItem("Sat May 3", "19°", "11°", "Wind: 4 km/h", "Humidity: 72%", R.drawable.sunny, "Sunny", "None", "0 mm", "0%", "East"),
-        ForecastItem("Sun May 4", "7°", "3°", "Wind: 17 km/h", "Humidity: 60%", R.drawable.cloudy, "Partly Cloudy", "Clouds", "5 mm", "40%", "West")
+        ForecastItem("Fri May 2", "3°", "0°", "29 km/h", "80%", R.drawable.rainy, "Rainy", "Rain,", "11 mm", "90%", "North"),
+        ForecastItem("Sat May 3", "19°", "11°", "4 km/h", "30%", R.drawable.sunny, "Sunny", "None", "", "0%", "East"),
+        ForecastItem("Sun May 4", "7°", "3°", "17 km/h", "70%", R.drawable.cloudy, "Cloudy", "None", "", "40%", "West"),
+        ForecastItem("Mon May 5", "6°", "1°", "35 km/h", "75%", R.drawable.thunderstorm, "Thunderstorm", "Thunderstorm,", "8 mm", "100%", "South"),
+        ForecastItem("Tue May 6", "-2°", "-6°", "15 km/h", "85%", R.drawable.snow, "Snow", "Snow,", "12 cm", "95%", "Northwest"),
+        ForecastItem("Wed May 7", "4°", "2°", "10 km/h", "90%", R.drawable.fog, "Fog", "Fog", "", "60%", "East")
     )
 
-    // Main container with background and scrollable content
+    // Box to hold background image and weather items
     Box(Modifier.fillMaxSize()) {
-
-        // Background image
+        // Background image for the screen
         Image(
             painter = painterResource(id = R.drawable.sunny_background),
-            contentDescription = null, // No screen reader needed
+            contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop // Stretch image to fit screen
+            contentScale = ContentScale.Crop
         )
 
-        // Scrollable list of forecast items
+        // LazyColumn to display the list of forecast items
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp) // Add padding around the list
+                .padding(16.dp)
         ) {
-            // Add each forecast item to the list
+            // For each forecast item, display it using DailyForecastItem
             items(items) { item ->
-                DailyForecastItem(item) // Show item using custom UI
+                DailyForecastItem(item)
             }
         }
     }
@@ -284,17 +286,16 @@ fun DailyScreen() {
 
 @Composable
 fun DailyForecastItem(item: ForecastItem) {
-    // Card to hold each forecast item
+    // Card to display individual weather forecast details
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 16.dp), // Space between items
-        colors = CardDefaults.cardColors(containerColor = Color.Gray) // Background color
+            .padding(bottom = 16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Gray)
     ) {
-        // Content inside the card
+        // Column to arrange all weather information vertically
         Column(modifier = Modifier.padding(16.dp)) {
-
-            // Top row: Icon, Date, and Weather Condition
+            // Row for displaying date, weather icon, and condition
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
@@ -306,54 +307,42 @@ fun DailyForecastItem(item: ForecastItem) {
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text(item.date, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text(item.condition, fontSize = 20.sp, color = Color.White)
+                    Text(item.date, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(item.condition, fontSize = 26.sp, color = Color.White)
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Row for High and Low temperatures
+            // Row for displaying high and low temperatures
             Row(
-                horizontalArrangement = Arrangement.Start,
-                modifier = Modifier.fillMaxWidth()
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("High: ${item.high}", color = Color.White, fontSize = 22.sp)
+                Text("High: ${item.high}", fontSize = 24.sp, color = Color.White)
                 Spacer(modifier = Modifier.width(16.dp))
-                Text("Low: ${item.low}", color = Color.White, fontSize = 22.sp)
+                Text("Low: ${item.low}", fontSize = 24.sp, color = Color.White)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Row for Precipitation Type and Amount
+            // Row for displaying wind and humidity details
             Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Precipitation: ${item.precipitationType}", color = Color.White, fontSize = 22.sp)
-                Text("Amount: ${item.precipitationAmount}", color = Color.White, fontSize = 22.sp)
+                Text("Wind: ${item.wind} (${item.windDirection})", fontSize = 24.sp, color = Color.White)
+                Text("Humidity: ${item.humidity}", fontSize = 24.sp, color = Color.White)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Row for Humidity and Chance of Rain
+            // Row for displaying precipitation details and chance of precipitation
             Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(item.humidity, color = Color.White, fontSize = 22.sp)
-                Text("Chance of Rain: ${item.precipitationProbability}", color = Color.White, fontSize = 22.sp)
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Row for Wind and Wind Direction
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(item.wind, color = Color.White, fontSize = 22.sp)
-                Text("Wind Direction: ${item.windDirection}", color = Color.White, fontSize = 22.sp)
+                Text("Precipitation: ${item.precipitationType} ${item.precipitationAmount}", fontSize = 24.sp, color = Color.White)
+                Text("Chance: ${item.precipitationProbability}", fontSize = 24.sp, color = Color.White)
             }
         }
     }
