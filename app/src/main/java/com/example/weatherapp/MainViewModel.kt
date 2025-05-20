@@ -72,6 +72,8 @@ class MainViewModel : ViewModel() {
                     println("${day}: ${day.day.condition.text}")
                 }
                 _weather.value = response  // Update weather state with API response
+                println("Returned days: ${response.forecast.forecastday.size}")  // Debug: print number of forecast days
+
             } catch (e: Exception) {
                 e.printStackTrace()  // Print error if call fails
             }

@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
                     // Get latitude, longitude as "lat,lng" string
                     val latLng = "${it.latitude},${it.longitude}"
                     // Fetch weather for this location from API
-                    viewModel.fetchWeatherByLocation(latLng)
+                    viewModel.fetchWeatherByLocation("Halifax")  // Use fixed city name for consistent forecast data
                     // Update location text shown in UI
                     viewModel.updateLocation("Halifax, Nova Scotia")
                 }

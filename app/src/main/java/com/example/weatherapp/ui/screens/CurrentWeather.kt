@@ -37,7 +37,7 @@ fun CurrentWeatherScreen(weather: Weather?) {
     // Pick background image based on weather condition text
     val backgroundImage = when {
         conditionText.contains("Sunny", ignoreCase = true) -> R.drawable.sunny_background
-        conditionText.contains("Cloud", ignoreCase = true) -> R.drawable.cloudy_background
+        conditionText.contains("Cloud", ignoreCase = true) || conditionText.contains("Overcast", ignoreCase = true) -> R.drawable.cloudy_background
         conditionText.contains("Rain", ignoreCase = true) -> R.drawable.rainy_background
         conditionText.contains("Snow", ignoreCase = true) -> R.drawable.snow_background
         // For fog or mist conditions, show fog background
@@ -52,7 +52,7 @@ fun CurrentWeatherScreen(weather: Weather?) {
     // Pick icon image based on weather condition text
     val iconId = when {
         conditionText.contains("Sunny", ignoreCase = true) -> R.drawable.sunny
-        conditionText.contains("Cloud", ignoreCase = true) -> R.drawable.cloudy
+        conditionText.contains("Cloud", ignoreCase = true) || conditionText.contains("Overcast", ignoreCase = true) -> R.drawable.cloudy
         conditionText.contains("Rain", ignoreCase = true) -> R.drawable.rainy
         conditionText.contains("Snow", ignoreCase = true) -> R.drawable.snow
         conditionText.contains("Fog", ignoreCase = true) || conditionText.contains(

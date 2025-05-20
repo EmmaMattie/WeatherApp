@@ -34,7 +34,8 @@ fun DailyForecastScreen(weather: Weather?) {
     // Pick background image based on current weather
     val backgroundImage = when {
         currentConditionText.contains("Sunny", ignoreCase = true) -> R.drawable.sunny_background
-        currentConditionText.contains("Cloud", ignoreCase = true) -> R.drawable.cloudy_background
+        currentConditionText.contains("Cloud", ignoreCase = true) || currentConditionText.contains("Overcast", ignoreCase = true)
+        -> R.drawable.cloudy_background
         currentConditionText.contains("Rain", ignoreCase = true) -> R.drawable.rainy_background
         currentConditionText.contains("Snow", ignoreCase = true) -> R.drawable.snow_background
         currentConditionText.contains("Fog", ignoreCase = true) || currentConditionText.contains("Mist", ignoreCase = true) -> R.drawable.fog_background
