@@ -17,112 +17,137 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weatherapp.R
+import com.example.weatherapp.models.Weather
 
 @Composable
-fun CurrentWeatherScreen() {
-    // Fill the screen with a background and content
-    Box(Modifier.fillMaxSize()) {
+fun CurrentWeatherScreen(weather: Weather?) {
+    if (weather == null) {
+        // Show loading text if data is not ready
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Loading...", fontSize = 24.sp, color = Color.White)
+        }
+        return
+    }
 
-        // Background image
+    val conditionText = weather.current.condition.text
+
+    // Choose background image based on current weather condition
+    val backgroundImage = when {
+        conditionText.contains("Sunny", ignoreCase = true) -> R.drawable.sunny_background
+        conditionText.contains("Cloud", ignoreCase = true) -> R.drawable.cloudy_background
+        conditionText.contains("Rain", ignoreCase = true) -> R.drawable.rainy_background
+        conditionText.contains("Snow", ignoreCase = true) -> R.drawable.snow_background
+        conditionText.contains("Fog", ignoreCase = true) || conditionText.contains("Mist", ignoreCase = true) -> R.drawable.fog_background
+        else -> R.drawable.sunny_background
+    }
+
+    // Choose icon image based on current weather condition
+    val iconId = when {
+        conditionText.contains("Sunny", ignoreCase = true) -> R.drawable.sunny
+        conditionText.contains("Cloud", ignoreCase = true) -> R.drawable.cloudy
+        conditionText.contains("Rain", ignoreCase = true) -> R.drawable.rainy
+        conditionText.contains("Snow", ignoreCase = true) -> R.drawable.snow
+        conditionText.contains("Fog", ignoreCase = true) || conditionText.contains("Mist", ignoreCase = true) -> R.drawable.fog
+        conditionText.contains("Thunder", ignoreCase = true) -> R.drawable.thunderstorm
+        else -> R.drawable.sunny
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        // Background image fills screen
         Image(
-            painter = painterResource(id = R.drawable.sunny_background),
+            painter = painterResource(id = backgroundImage),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
-        // Main column to hold all weather info
+        // Weather info content scrollable with padding
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-
-            // Top row with weather icon and city/temp
+            // Row with icon and location + temperature
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.Start
             ) {
-                // Sunny icon
+                // Weather icon
                 Image(
-                    painter = painterResource(id = R.drawable.sunny),
+                    painter = painterResource(id = iconId),
                     contentDescription = "Weather Icon",
                     modifier = Modifier.size(100.dp)
                 )
                 Spacer(Modifier.width(16.dp))
                 Column {
-                    // City name and temperature
-                    Text("Halifax", fontSize = 30.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    // Location name
+                    Text(weather.location.name, fontSize = 30.sp, color = Color.White, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
-                    Text("20°C", fontSize = 48.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    // Current temperature
+                    Text("${weather.current.temperatureCelsius}°C", fontSize = 48.sp, color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
 
             Spacer(Modifier.height(4.dp))
 
-            // Condition and high/low temps
+            // Row with weather condition and high/low temps
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
                 horizontalArrangement = Arrangement.Start
             ) {
                 Column {
-                    Text("Sunny", fontSize = 30.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(conditionText, fontSize = 30.sp, color = Color.White, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(4.dp))
-                    Text("H: 25°C   L: 16°C", fontSize = 30.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(
+                        "H: ${weather.forecast.forecastday[0].day.maxTemperatureCelsius}°  L: ${weather.forecast.forecastday[0].day.minTemperatureCelsius}°",
+                        fontSize = 30.sp, color = Color.White, fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
-            // Adds empty space between UI elements
             Spacer(Modifier.height(16.dp))
 
-            // Gray box with weather details
+            // Gray box with additional weather details
             Surface(
                 modifier = Modifier.padding(4.dp),
                 color = Color.Gray,
                 shape = MaterialTheme.shapes.medium
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-
-                    // Row 1: Wind Direction and Speed
+                    // Wind direction and speed row
                     Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                         Column {
                             Text("Wind Direction", fontSize = 26.sp, color = Color.White)
-                            Text("North", fontSize = 23.sp, color = Color.White)
+                            Text(weather.current.windDirection, fontSize = 23.sp, color = Color.White)
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text("Wind Speed", fontSize = 26.sp, color = Color.White)
-                            Text("3 km/h", fontSize = 23.sp, color = Color.White)
+                            Text("${weather.current.windSpeedKph} km/h", fontSize = 23.sp, color = Color.White)
                         }
                     }
-
                     Spacer(Modifier.height(16.dp))
-
-                    // Row 2: Humidity and Precipitation
+                    // Humidity and precipitation row
                     Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                         Column {
                             Text("Humidity", fontSize = 26.sp, color = Color.White)
-                            Text("40%", fontSize = 23.sp, color = Color.White)
+                            Text("${weather.current.humidity}%", fontSize = 23.sp, color = Color.White)
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text("Precipitation", fontSize = 26.sp, color = Color.White)
-                            Text("None", fontSize = 23.sp, color = Color.White)
+                            Text("${weather.current.precipitationMillimeters} mm", fontSize = 23.sp, color = Color.White)
                         }
                     }
-
                     Spacer(Modifier.height(16.dp))
-
-                    // Row 3: Chance of Precipitation
+                    // Chance of precipitation row
                     Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                         Column {
                             Text("Chance of Precipitation", fontSize = 26.sp, color = Color.White)
-                            Text("0%", fontSize = 22.sp, color = Color.White)
+                            Text("${weather.forecast.forecastday[0].day.dailyChanceOfRain}%", fontSize = 22.sp, color = Color.White)
                         }
-                        Column { } // Empty for spacing
+                        Column {}
                     }
                 }
             }

@@ -10,38 +10,34 @@ import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-// ViewModel handles weather data and location state
 class MainViewModel : ViewModel() {
 
-    // StateFlow to hold the current weather data
+    // Holds weather data (null if not loaded)
     private val _weather = MutableStateFlow<Weather?>(null)
     val weather: StateFlow<Weather?> = _weather
 
-    // New StateFlow to hold the current location string
-    private val _location = MutableStateFlow("Halifax, Nova Scotia") // default location shown initially
+    // Holds location name for UI display
+    private val _location = MutableStateFlow("Loading...")
     val location: StateFlow<String> = _location
 
-    // Retrofit instance to call the Weather API
+    // Setup Retrofit for API calls
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://api.weatherapi.com/")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    // Create service interface from Retrofit
+    // Create service from interface
     private val weatherService = retrofit.create(WeatherService::class.java)
 
+    // Your API key for WeatherAPI
     private val apiKey = "4d09ac90aef543f5a24121824252005"
 
+    // Called when ViewModel is created
     init {
-        fetchWeather() // Initial fetch using default location
+        fetchWeather() // Fetch default weather (Halifax)
     }
 
-    // Updates the current location string to show on UI
-    fun updateLocation(newLocation: String) {
-        _location.value = newLocation
-    }
-
-    // Fetches weather for default location
+    // Fetch weather for Halifax
     fun fetchWeather() {
         viewModelScope.launch {
             try {
@@ -52,14 +48,14 @@ class MainViewModel : ViewModel() {
                     aqi = "no",
                     alerts = "no"
                 )
-                _weather.value = response
+                _weather.value = response // Update weather data
             } catch (e: Exception) {
-                e.printStackTrace()
+                e.printStackTrace() // Log error if call fails
             }
         }
     }
 
-    // Fetches weather based on given location string (lat,lng or city)
+    // Fetch weather by given location (lat,lng)
     fun fetchWeatherByLocation(location: String) {
         viewModelScope.launch {
             try {
@@ -70,10 +66,15 @@ class MainViewModel : ViewModel() {
                     aqi = "no",
                     alerts = "no"
                 )
-                _weather.value = response
+                _weather.value = response // Update weather data
             } catch (e: Exception) {
-                e.printStackTrace()
+                e.printStackTrace() // Log error
             }
         }
+    }
+
+    // Change location shown in UI
+    fun updateLocation(newLocation: String) {
+        _location.value = newLocation
     }
 }

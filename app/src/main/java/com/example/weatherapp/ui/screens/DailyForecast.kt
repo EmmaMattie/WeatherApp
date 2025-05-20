@@ -15,36 +15,69 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.weatherapp.R
+import com.example.weatherapp.models.Weather
 
 @Composable
-fun DailyForecastScreen() {
-    // List of forecast items with weather data
-    val items = listOf(
-        ForecastItem("Fri, May 2", "3°", "0°", "29 km/h", "80%", R.drawable.rainy, "Rainy", "Rain,", "11 mm", "90%", "North"),
-        ForecastItem("Sat, May 3", "19°", "11°", "4 km/h", "30%", R.drawable.sunny, "Sunny", "None", "", "0%", "East"),
-        ForecastItem("Sun, May 4", "7°", "3°", "17 km/h", "70%", R.drawable.cloudy, "Cloudy", "None", "", "40%", "West"),
-        ForecastItem("Mon, May 5", "6°", "1°", "35 km/h", "75%", R.drawable.thunderstorm, "Thunderstorm", "Thunderstorm,", "8 mm", "100%", "South"),
-        ForecastItem("Tue, May 6", "-2°", "-6°", "15 km/h", "85%", R.drawable.snow, "Snow", "Snow,", "12 cm", "95%", "Northwest"),
-        ForecastItem("Wed, May 7", "4°", "2°", "10 km/h", "90%", R.drawable.fog, "Fog", "Fog", "", "60%", "East")
-    )
+fun DailyForecastScreen(weather: Weather?) {
+    // Show loading text if weather data is not yet available
+    if (weather == null) {
+        Text("Loading...", modifier = Modifier.fillMaxSize(), color = Color.White)
+        return
+    }
 
-    // Background image + forecast list
+    // Use the current weather condition to decide the background image
+    val currentConditionText = weather.current.condition.text
+    val backgroundImage = when {
+        currentConditionText.contains("Sunny", ignoreCase = true) -> R.drawable.sunny_background
+        currentConditionText.contains("Cloud", ignoreCase = true) -> R.drawable.cloudy_background
+        currentConditionText.contains("Rain", ignoreCase = true) -> R.drawable.rainy_background
+        currentConditionText.contains("Snow", ignoreCase = true) -> R.drawable.snow_background
+        currentConditionText.contains("Fog", ignoreCase = true) || currentConditionText.contains("Mist", ignoreCase = true) -> R.drawable.fog_background
+        else -> R.drawable.sunny_background
+    }
+
     Box(Modifier.fillMaxSize()) {
-        // Background image
+        // Set the background image according to current weather condition
         Image(
-            painter = painterResource(id = R.drawable.sunny_background),
+            painter = painterResource(id = backgroundImage),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
-        // Scrollable list of forecast cards
+        // Create a list of ForecastItem from the forecast days in weather data
+        val forecastItems = weather.forecast.forecastday.map { day ->
+            ForecastItem(
+                date = day.date,
+                high = "${day.day.maxTemperatureCelsius}°",
+                low = "${day.day.minTemperatureCelsius}°",
+                wind = "${day.day.maxWindSpeedKph} km/h",
+                humidity = "${day.day.averageHumidity}%",
+                // Choose the icon based on the day's weather condition text
+                icon = when {
+                    day.day.condition.text.contains("Sunny", ignoreCase = true) -> R.drawable.sunny
+                    day.day.condition.text.contains("Cloud", ignoreCase = true) -> R.drawable.cloudy
+                    day.day.condition.text.contains("Rain", ignoreCase = true) -> R.drawable.rainy
+                    day.day.condition.text.contains("Snow", ignoreCase = true) -> R.drawable.snow
+                    day.day.condition.text.contains("Fog", ignoreCase = true) || day.day.condition.text.contains("Mist", ignoreCase = true) -> R.drawable.fog
+                    day.day.condition.text.contains("Thunder", ignoreCase = true) -> R.drawable.thunderstorm
+                    else -> R.drawable.sunny
+                },
+                condition = day.day.condition.text,
+                precipitationType = "Precipitation",
+                precipitationAmount = "${day.day.totalPrecipitationMillimeters} mm",
+                precipitationProbability = "${day.day.dailyChanceOfRain}%",
+                windDirection = "N/A" // Wind direction is not provided in forecast data
+            )
+        }
+
+        // Show the forecast list as a scrollable column
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            items(items) { item ->
+            items(forecastItems) { item ->
                 DailyForecastItem(item)
             }
         }
@@ -53,21 +86,19 @@ fun DailyForecastScreen() {
 
 @Composable
 fun DailyForecastItem(item: ForecastItem) {
-    // Card to show one day of forecast
+    // Card representing one day of weather forecast
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Gray)
     ) {
-        // All forecast info inside the card
         Column(modifier = Modifier.padding(16.dp)) {
-
-            // Row with icon, date, and condition
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
             ) {
+                // Weather condition icon
                 Image(
                     painter = painterResource(id = item.icon),
                     contentDescription = "Forecast Icon",
@@ -75,48 +106,45 @@ fun DailyForecastItem(item: ForecastItem) {
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
+                    // Date of forecast
                     Text(item.date, fontSize = 28.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    // Text description of the condition
                     Text(item.condition, fontSize = 26.sp, color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
-
-            // Adds empty space between UI elements
             Spacer(modifier = Modifier.height(8.dp))
-
-            // High and low temperature side by side
             Row(verticalAlignment = Alignment.CenterVertically) {
+                // High temperature text
                 Text("High: ${item.high}", fontSize = 24.sp, color = Color.White)
                 Spacer(modifier = Modifier.width(16.dp))
+                // Low temperature text
                 Text("Low: ${item.low}", fontSize = 24.sp, color = Color.White)
             }
-
-            // Adds vertical space of 8dp between UI elements
             Spacer(modifier = Modifier.height(8.dp))
-
-            // Wind and humidity row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // Wind speed and direction text
                 Text("Wind: ${item.wind} (${item.windDirection})", fontSize = 24.sp, color = Color.White)
+                // Humidity percentage text
                 Text("Humidity: ${item.humidity}", fontSize = 24.sp, color = Color.White)
             }
-
             Spacer(modifier = Modifier.height(8.dp))
-
-            // Precipitation info row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // Precipitation amount and type text
                 Text("Precipitation: ${item.precipitationType} ${item.precipitationAmount}", fontSize = 24.sp, color = Color.White)
+                // Chance of precipitation text
                 Text("Chance: ${item.precipitationProbability}", fontSize = 24.sp, color = Color.White)
             }
         }
     }
 }
 
-// Holds one day's forecast details
+// Data class holding daily forecast details to display
 data class ForecastItem(
     val date: String,
     val high: String,

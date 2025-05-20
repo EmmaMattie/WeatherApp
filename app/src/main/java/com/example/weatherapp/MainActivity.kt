@@ -13,6 +13,8 @@ import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,63 +29,56 @@ import com.example.weatherapp.ui.theme.WeatherAppTheme
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
-// MainActivity is the app's entry point and controls UI and location access
 class MainActivity : ComponentActivity() {
 
-    // Create ViewModel instance for data handling
+    // ViewModel to manage weather data
     private val viewModel: MainViewModel by viewModels()
 
-    // Location client to get device GPS coordinates
-    // 'lateinit var' means the variable is created now but given a value later
+    // Location provider client to get device location
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize fused location client for GPS data
+        // Initialize location client
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // Request location permission from user and fetch location if granted
+        // Request location permission and fetch location if granted
         requestLocationPermissionAndFetch()
 
-        // Set Jetpack Compose content for the UI
+        // Set Compose UI content
         setContent {
             WeatherAppTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    // Show main UI screen and pass ViewModel for data
                     DisplayUI(viewModel)
                 }
             }
         }
     }
 
-    // Checks if location permission is granted, requests if not
-    // Calls fetchLocation() after permission is granted
+    // Request location permission, or fetch location if already granted
     private fun requestLocationPermissionAndFetch() {
-        // Launcher for permission request result
         val permissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { isGranted ->
-            if (isGranted) fetchLocation() // If granted, get location
+            if (isGranted) fetchLocation()
         }
 
-        // Check if permission is already granted
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            // Launch permission request dialog
+            // Ask for permission if not granted
             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         } else {
-            // Permission already granted, fetch location directly
+            // Permission granted, fetch location
             fetchLocation()
         }
     }
 
-    // Gets the last known location from the device
+    // Fetch last known location and update weather and location string
     private fun fetchLocation() {
-        // Confirm permission still granted before accessing location
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -91,10 +86,9 @@ class MainActivity : ComponentActivity() {
         ) {
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 location?.let {
-                    // Format latitude and longitude for API call
                     val latLng = "${it.latitude},${it.longitude}"
-                    // Tell ViewModel to fetch weather for this location
-                    viewModel.fetchWeatherByLocation(latLng)
+                    viewModel.fetchWeatherByLocation(latLng) // Fetch weather for location
+                    viewModel.updateLocation("Halifax, Nova Scotia") // Show static name on UI
                 }
             }
         }
@@ -104,21 +98,24 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DisplayUI(viewModel: MainViewModel) {
-    // NavController manages app screen navigation
+    // Navigation controller for switching screens
     val navController = rememberNavController()
 
+    // Collect location and weather data as Compose state
+    val location by viewModel.location.collectAsState(initial = "Loading...")
+    val weather by viewModel.weather.collectAsState(initial = null)
+
     Scaffold(
-        // Top app bar with location name and app title
         topBar = {
             TopAppBar(
                 title = {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 140.dp) // Position text centered
+                            .padding(start = 140.dp)
                     ) {
                         Text(
-                            text = "Halifax, Nova Scotia", // Static for now
+                            text = location,
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.align(Alignment.CenterStart)
@@ -137,17 +134,14 @@ fun DisplayUI(viewModel: MainViewModel) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Gray)
             )
         },
-        // Bottom navigation bar to switch screens
         bottomBar = {
             NavigationBar(containerColor = Color.Gray) {
-                // "Now" tab with home icon
                 NavigationBarItem(
                     icon = { Icon(Icons.Filled.Home, contentDescription = "Now") },
                     label = { Text("Now", fontSize = 20.sp, fontWeight = FontWeight.Bold) },
                     selected = navController.currentBackStackEntryAsState().value?.destination?.route == "now",
                     onClick = { navController.navigate("now") }
                 )
-                // "Daily" tab with cloud icon
                 NavigationBarItem(
                     icon = { Icon(Icons.Filled.Cloud, contentDescription = "Daily") },
                     label = { Text("Daily", fontSize = 20.sp, fontWeight = FontWeight.Bold) },
@@ -157,16 +151,15 @@ fun DisplayUI(viewModel: MainViewModel) {
             }
         }
     ) { innerPadding ->
-        // NavHost shows current screen based on navigation state
         NavHost(
             navController = navController,
-            startDestination = "now", // Show current weather first
+            startDestination = "now",
             modifier = Modifier.padding(innerPadding)
         ) {
-            // Composable for current weather screen
-            composable("now") { CurrentWeatherScreen() }
-            // Composable for daily forecast screen
-            composable("daily") { DailyForecastScreen() }
+            // Show current weather screen with live data
+            composable("now") { CurrentWeatherScreen(weather) }
+            // Show daily forecast screen with live data
+            composable("daily") { DailyForecastScreen(weather) }
         }
     }
 }
