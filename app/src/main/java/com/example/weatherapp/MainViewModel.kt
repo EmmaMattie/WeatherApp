@@ -1,48 +1,79 @@
 package com.example.weatherapp
 
 import androidx.lifecycle.ViewModel
-import com.example.weatherapp.models.Current
-import com.example.weatherapp.models.Forecast
+import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.models.Weather
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.State
+import com.example.weatherapp.services.WeatherService
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
-// ViewModel class for managing weather-related data
+// ViewModel handles weather data and location state
 class MainViewModel : ViewModel() {
 
-    // Weather variable initialized inside the init block
-    private val _currentWeather = mutableStateOf(
-        Current(
-            "Cloudy",  // condition
-            14,         // high temperature
-            10,         // low temperature
-            65,         // humidity
-            15,         // wind speed
-            "North",    // wind direction
-            "Rain",     // precipitation type
-            "5 mm",     // precipitation amount
-            6,          // UV index
-            10          // visibility
-        )
-    )
+    // StateFlow to hold the current weather data
+    private val _weather = MutableStateFlow<Weather?>(null)
+    val weather: StateFlow<Weather?> = _weather
 
-    // Exposes currentWeather as a read-only State
-    val currentWeather: State<Current> = _currentWeather
+    // New StateFlow to hold the current location string
+    private val _location = MutableStateFlow("Halifax, Nova Scotia") // default location shown initially
+    val location: StateFlow<String> = _location
 
-    // Variable to hold overall weather data, including forecast
-    val weatherData: Weather
+    // Retrofit instance to call the Weather API
+    private val retrofit = Retrofit.Builder()
+        .baseUrl("https://api.weatherapi.com/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
 
-    // Initialization block to set up forecast and weather data
+    // Create service interface from Retrofit
+    private val weatherService = retrofit.create(WeatherService::class.java)
+
+    private val apiKey = "4d09ac90aef543f5a24121824252005"
+
     init {
-        // List of forecasted weather for the upcoming days
-        val forecast = listOf(
-            Forecast("Monday", 3, 0, "Rainy", "Rain", "10 mm", 10, "East", 75),
-            Forecast("Tuesday", 4, 2, "Sunny", null, null, 5, "South", 65),
-            Forecast("Wednesday", 6, 3, "Cloudy", null, null, 7, "West", 60),
-            Forecast("Thursday", 8, 5, "Rainy", "Rain", "15 mm", 12, "North", 55)
-        )
+        fetchWeather() // Initial fetch using default location
+    }
 
-        // Set the weatherData variable to hold current weather and forecast
-        weatherData = Weather(_currentWeather.value, forecast)
+    // Updates the current location string to show on UI
+    fun updateLocation(newLocation: String) {
+        _location.value = newLocation
+    }
+
+    // Fetches weather for default location
+    fun fetchWeather() {
+        viewModelScope.launch {
+            try {
+                val response = weatherService.getWeather(
+                    apiKey = apiKey,
+                    location = "Halifax",
+                    days = 7,
+                    aqi = "no",
+                    alerts = "no"
+                )
+                _weather.value = response
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    // Fetches weather based on given location string (lat,lng or city)
+    fun fetchWeatherByLocation(location: String) {
+        viewModelScope.launch {
+            try {
+                val response = weatherService.getWeather(
+                    apiKey = apiKey,
+                    location = location,
+                    days = 7,
+                    aqi = "no",
+                    alerts = "no"
+                )
+                _weather.value = response
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }
