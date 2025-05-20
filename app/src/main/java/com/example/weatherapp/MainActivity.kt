@@ -28,35 +28,42 @@ import com.example.weatherapp.ui.screens.DailyForecastScreen
 import com.example.weatherapp.ui.theme.WeatherAppTheme
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.jakewharton.threetenabp.AndroidThreeTen
 
 class MainActivity : ComponentActivity() {
 
-    // ViewModel to manage weather data
+    // ViewModel holds weather data and app logic (handles how data is fetched, processed, and updated)
     private val viewModel: MainViewModel by viewModels()
 
-    // Location provider client to get device location
+    // Location client to get device location
+    // I used 'lateinit' because fusedLocationClient can't be created immediately. It needs the app to start first, then I set it up inside onCreate().
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
+    // Called when the app screen is created; sets up the initial state and UI
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize location client
+        // Initialize ThreeTenABP for date/time formatting (needed for date in forecasts)
+        // ThreeTenABP is a library that helps with modern date and time handling in Android apps, like formatting forecast dates.
+        AndroidThreeTen.init(this)
+
+        // Get location provider client
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // Request location permission and fetch location if granted
+        // Ask user for location permission and then get location & weather
         requestLocationPermissionAndFetch()
 
-        // Set Compose UI content
+        // Set the UI content with Jetpack Compose
         setContent {
             WeatherAppTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    DisplayUI(viewModel)
+                    DisplayUI(viewModel)  // Call composable to show UI
                 }
             }
         }
     }
 
-    // Request location permission, or fetch location if already granted
+    // Request location permission if not granted, then fetch location
     private fun requestLocationPermissionAndFetch() {
         val permissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()
@@ -69,15 +76,15 @@ class MainActivity : ComponentActivity() {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            // Ask for permission if not granted
+            // Permission not granted, request it
             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         } else {
-            // Permission granted, fetch location
+            // Permission already granted, fetch location now
             fetchLocation()
         }
     }
 
-    // Fetch last known location and update weather and location string
+    // Fetch device location using fusedLocationClient
     private fun fetchLocation() {
         if (ActivityCompat.checkSelfPermission(
                 this,
@@ -86,26 +93,32 @@ class MainActivity : ComponentActivity() {
         ) {
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 location?.let {
+                    // Get latitude, longitude as "lat,lng" string
                     val latLng = "${it.latitude},${it.longitude}"
-                    viewModel.fetchWeatherByLocation(latLng) // Fetch weather for location
-                    viewModel.updateLocation("Halifax, Nova Scotia") // Show static name on UI
+                    // Fetch weather for this location from API
+                    viewModel.fetchWeatherByLocation(latLng)
+                    // Update location text shown in UI
+                    viewModel.updateLocation("Halifax, Nova Scotia")
                 }
             }
         }
     }
 }
 
+// Composable function to display main UI with navigation and screens
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DisplayUI(viewModel: MainViewModel) {
-    // Navigation controller for switching screens
     val navController = rememberNavController()
 
-    // Collect location and weather data as Compose state
+    // Collect current location string from ViewModel
     val location by viewModel.location.collectAsState(initial = "Loading...")
+
+    // Collect current weather data from ViewModel
     val weather by viewModel.weather.collectAsState(initial = null)
 
     Scaffold(
+        // Top app bar shows location and app name
         topBar = {
             TopAppBar(
                 title = {
@@ -134,6 +147,8 @@ fun DisplayUI(viewModel: MainViewModel) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Gray)
             )
         },
+
+        // Bottom navigation bar to switch between Now and Daily forecast screens
         bottomBar = {
             NavigationBar(containerColor = Color.Gray) {
                 NavigationBarItem(
@@ -151,14 +166,15 @@ fun DisplayUI(viewModel: MainViewModel) {
             }
         }
     ) { innerPadding ->
+        // Navigation host controls which screen to show
         NavHost(
             navController = navController,
-            startDestination = "now",
+            startDestination = "now",  // Start on current weather screen
             modifier = Modifier.padding(innerPadding)
         ) {
-            // Show current weather screen with live data
+            // Show CurrentWeatherScreen composable when on "now"
             composable("now") { CurrentWeatherScreen(weather) }
-            // Show daily forecast screen with live data
+            // Show DailyForecastScreen composable when on "daily"
             composable("daily") { DailyForecastScreen(weather) }
         }
     }

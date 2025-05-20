@@ -12,9 +12,9 @@ interface WeatherService {
     @GET("v1/forecast.json")
     suspend fun getWeather(
         @Query("key") apiKey: String,       // API authentication key
-        @Query("q") location: String,       // Location query (city or coordinates)
+        @Query("q") location: String,       // Location query
         @Query("days") days: Int,            // Number of forecast days
-        @Query("aqi") aqi: String,           // Air quality info ("yes" or "no")
-        @Query("alerts") alerts: String      // Weather alerts ("yes" or "no")
+        @Query("aqi") aqi: String,           // Air quality info
+        @Query("alerts") alerts: String      // Weather alerts
     ): Weather // Returns Weather data class parsed from JSON
 }

@@ -2,14 +2,14 @@ package com.example.weatherapp.models
 
 import com.google.gson.annotations.SerializedName
 
-// Top-level weather response holding location, current weather, and forecast
+// Main weather data object returned by the API, containing location, current conditions, and forecast
 data class Weather(
-    val location: Location,          // Location information (city, region, country)
+    val location: Location,          // Location information (city)
     val current: CurrentWeather,     // Current weather details
     val forecast: Forecast           // Weather forecast data
 )
 
-// Location information like city, region, country, and local time
+// Location information like city and local time
 data class Location(
     val name: String,                // City name
     val region: String,              // Region or state
@@ -19,17 +19,18 @@ data class Location(
 
 // Current weather details with temperature, condition, wind, humidity, precipitation
 data class CurrentWeather(
+    // If JSON has "temp_c", use its value here as temperatureCelsius
     @SerializedName("temp_c") val temperatureCelsius: Float,   // Current temperature in Celsius
     val condition: Condition,                                  // Weather condition text and icon
     @SerializedName("wind_kph") val windSpeedKph: Float,      // Wind speed in km/h
-    @SerializedName("wind_dir") val windDirection: String,    // Wind direction (e.g. N, NE, WSW)
+    @SerializedName("wind_dir") val windDirection: String,    // Wind direction (N, NE, WSW, etc.)
     val humidity: Int,                                         // Humidity percentage (0-100)
     @SerializedName("precip_mm") val precipitationMillimeters: Float // Precipitation amount in millimeters
 )
 
 // Weather condition description and icon URL
 data class Condition(
-    val text: String,    // Text description of the weather (e.g. Sunny, Rainy)
+    val text: String,    // Text description of the weather
     val icon: String     // URL to the weather icon image
 )
 
@@ -40,12 +41,13 @@ data class Forecast(
 
 // Data for one day in the forecast
 data class ForecastDay(
-    val date: String,        // Date of forecast day (e.g. "2025-10-15")
+    val date: String,        // Date of forecast day
     val day: DayDetails      // Weather details for that day
 )
 
 // Detailed weather info for a single day
 data class DayDetails(
+    // If JSON has "maxtemp_c", use its value here as maxTemperatureCelsius
     @SerializedName("maxtemp_c") val maxTemperatureCelsius: Float,    // Max temperature for the day in Celsius
     @SerializedName("mintemp_c") val minTemperatureCelsius: Float,    // Min temperature for the day in Celsius
     val condition: Condition,                                          // Weather condition text and icon for the day

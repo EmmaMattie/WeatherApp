@@ -52,6 +52,7 @@ android {
 
 dependencies {
 
+    implementation ("com.jakewharton.threetenabp:threetenabp:1.4.4")
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
     implementation("com.squareup.retrofit2:converter-gson:3.0.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
