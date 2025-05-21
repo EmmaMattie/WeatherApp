@@ -70,7 +70,7 @@ fun DailyForecastScreen(weather: Weather?) {
                 // Chooses icon based on day's weather condition text
                 icon = when {
                     day.day.condition.text.contains("Sunny", ignoreCase = true) -> R.drawable.sunny
-                    day.day.condition.text.contains("Cloud", ignoreCase = true) -> R.drawable.cloudy
+                    day.day.condition.text.contains("Cloud", ignoreCase = true) || day.day.condition.text.contains("Overcast", ignoreCase = true) -> R.drawable.cloudy
                     day.day.condition.text.contains("Rain", ignoreCase = true) -> R.drawable.rainy
                     day.day.condition.text.contains("Snow", ignoreCase = true) -> R.drawable.snow
                     day.day.condition.text.contains("Fog", ignoreCase = true) || day.day.condition.text.contains("Mist", ignoreCase = true) -> R.drawable.fog
