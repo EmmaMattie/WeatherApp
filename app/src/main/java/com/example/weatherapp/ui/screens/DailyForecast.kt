@@ -23,51 +23,45 @@ import java.util.Locale
 
 @Composable
 fun DailyForecastScreen(weather: Weather?) {
-    // Show loading text if weather data is not yet available
     if (weather == null) {
         Text("Loading...", modifier = Modifier.fillMaxSize(), color = Color.White)
         return
     }
-
-    // Get current weather condition text for background choice
     val currentConditionText = weather.current.condition.text
-    // Pick background image based on current weather
+
     val backgroundImage = when {
-        currentConditionText.contains("Sunny", ignoreCase = true) -> R.drawable.sunny_background
-        currentConditionText.contains("Cloud", ignoreCase = true) || currentConditionText.contains("Overcast", ignoreCase = true)
-        -> R.drawable.cloudy_background
-        currentConditionText.contains("Rain", ignoreCase = true) -> R.drawable.rainy_background
+        currentConditionText.contains("Thunder", ignoreCase = true) || currentConditionText.contains("Storm", ignoreCase = true) -> R.drawable.thunderstorm_background
         currentConditionText.contains("Snow", ignoreCase = true) -> R.drawable.snow_background
+        currentConditionText.contains("Rain", ignoreCase = true) -> R.drawable.rainy_background
         currentConditionText.contains("Fog", ignoreCase = true) || currentConditionText.contains("Mist", ignoreCase = true) -> R.drawable.fog_background
-        else -> R.drawable.sunny_background // default background if none match
+        currentConditionText.contains("Cloud", ignoreCase = true) || currentConditionText.contains("Overcast", ignoreCase = true) -> R.drawable.cloudy_background
+        currentConditionText.contains("Sunny", ignoreCase = true) -> R.drawable.sunny_background
+        else -> R.drawable.sunny_background
     }
 
+
     Box(Modifier.fillMaxSize()) {
-        // Background image covers entire screen
         Image(
             painter = painterResource(id = backgroundImage),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop // crop to fill the box
+            contentScale = ContentScale.Crop
         )
 
-        // Function to format date string to readable format like "Tue, May 20"
         fun formatDate(dateString: String): String {
-            val date = LocalDate.parse(dateString) // convert string to date object
-            val dayOfWeek = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()) // get short day name
-            val formatter = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()) // month and day format
+            val date = LocalDate.parse(dateString)
+            val dayOfWeek = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+            val formatter = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
             return "$dayOfWeek, ${date.format(formatter)}"
         }
 
-        // Map each forecast day from API data into ForecastItem for UI display
         val forecastItems = weather.forecast.forecastday.map { day ->
             ForecastItem(
-                date = formatDate(day.date), // formatted date string
-                high = "${day.day.maxTemperatureCelsius}°", // max temp with degree symbol
-                low = "${day.day.minTemperatureCelsius}°",  // min temp with degree symbol
-                wind = "${day.day.maxWindSpeedKph} km/h",   // max wind speed with units
-                humidity = "${day.day.averageHumidity}%",   // average humidity percentage
-                // Chooses icon based on day's weather condition text
+                date = formatDate(day.date),
+                high = "${day.day.maxTemperatureCelsius}°",
+                low = "${day.day.minTemperatureCelsius}°",
+                wind = "${day.day.maxWindSpeedKph} km/h",
+                humidity = "${day.day.averageHumidity}%",
                 icon = when {
                     day.day.condition.text.contains("Sunny", ignoreCase = true) -> R.drawable.sunny
                     day.day.condition.text.contains("Cloud", ignoreCase = true) || day.day.condition.text.contains("Overcast", ignoreCase = true) -> R.drawable.cloudy
@@ -75,25 +69,23 @@ fun DailyForecastScreen(weather: Weather?) {
                     day.day.condition.text.contains("Snow", ignoreCase = true) -> R.drawable.snow
                     day.day.condition.text.contains("Fog", ignoreCase = true) || day.day.condition.text.contains("Mist", ignoreCase = true) -> R.drawable.fog
                     day.day.condition.text.contains("Thunder", ignoreCase = true) -> R.drawable.thunderstorm
-                    else -> R.drawable.sunny // default icon
+                    else -> R.drawable.sunny
                 },
-                condition = day.day.condition.text,                  // condition description text
-                precipitationType = "Precipitation",                   // fixed label
-                precipitationAmount = "${day.day.totalPrecipitationMillimeters} mm", // precipitation amount with units
-                precipitationProbability = "${day.day.dailyChanceOfRain}%",         // chance of rain percentage
-                windDirection = "N/A" // No wind direction information in forecast data
+                condition = day.day.condition.text,
+                precipitationType = "Precipitation",
+                precipitationAmount = "${day.day.totalPrecipitationMillimeters} mm",
+                precipitationProbability = "${day.day.dailyChanceOfRain}%",
+                windDirection = "N/A"
             )
         }
 
-        // Display the forecast items in a vertical scrollable list
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp) // padding around list
+                .padding(8.dp)
         ) {
-            // For each forecast day, show the weather info inside a styled card UI component
             items(forecastItems) { item ->
-                DailyForecastItem(item) // display each day as a card
+                DailyForecastItem(item)
             }
         }
     }
@@ -101,71 +93,53 @@ fun DailyForecastScreen(weather: Weather?) {
 
 @Composable
 fun DailyForecastItem(item: ForecastItem) {
-    // Card showing weather info for one day
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 16.dp), // space below card
-        colors = CardDefaults.cardColors(containerColor = Color.Gray) // gray background color
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xAA444444))
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
             ) {
-                // Weather icon image for the day
                 Image(
                     painter = painterResource(id = item.icon),
                     contentDescription = "Forecast Icon",
-                    modifier = Modifier.size(64.dp) // icon size 64dp
+                    modifier = Modifier.size(48.dp)
                 )
-                Spacer(modifier = Modifier.width(16.dp)) // space between icon and text
-
+                Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    // Date text
-                    Text(item.date, fontSize = 28.sp, color = Color.White, fontWeight = FontWeight.Bold)
-                    // Condition description text
-                    Text(item.condition, fontSize = 26.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(item.date, fontSize = 18.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(item.condition, fontSize = 16.sp, color = Color.White)
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp)) // vertical space
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // High temperature text
-                Text("High: ${item.high}", fontSize = 24.sp, color = Color.White)
-                Spacer(modifier = Modifier.width(16.dp)) // space between high and low
-                // Low temperature text
-                Text("Low: ${item.low}", fontSize = 24.sp, color = Color.White)
-            }
-            Spacer(modifier = Modifier.height(8.dp)) // vertical space
+            Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Wind info text
-                Text("Wind: ${item.wind} (${item.windDirection})", fontSize = 24.sp, color = Color.White)
-                // Humidity text
-                Text("Humidity: ${item.humidity}", fontSize = 24.sp, color = Color.White)
+            Row {
+                Text("High: ${item.high}", fontSize = 16.sp, color = Color.White)
+                Spacer(modifier = Modifier.width(16.dp))
+                Text("Low: ${item.low}", fontSize = 16.sp, color = Color.White)
             }
-            Spacer(modifier = Modifier.height(8.dp)) // vertical space
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Precipitation amount and label text
-                Text("Precipitation: ${item.precipitationType} ${item.precipitationAmount}", fontSize = 24.sp, color = Color.White)
-                // Chance of rain text
-                Text("Chance: ${item.precipitationProbability}", fontSize = 24.sp, color = Color.White)
-            }
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text("Wind: ${item.wind} (${item.windDirection})", fontSize = 16.sp, color = Color.White)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Humidity: ${item.humidity}", fontSize = 16.sp, color = Color.White)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Precipitation: ${item.precipitationType} ${item.precipitationAmount}", fontSize = 16.sp, color = Color.White)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Chance: ${item.precipitationProbability}", fontSize = 16.sp, color = Color.White)
         }
     }
 }
 
-// Data class holding daily forecast details for display
 data class ForecastItem(
-    val date: String,                 // formatted date string
+    val date: String,
     val high: String,
     val low: String,
     val wind: String,
@@ -175,5 +149,5 @@ data class ForecastItem(
     val precipitationType: String,
     val precipitationAmount: String,
     val precipitationProbability: String,
-    val windDirection: String        // wind direction text or "N/A"
+    val windDirection: String
 )

@@ -17,7 +17,7 @@ class MainViewModel : ViewModel() {
     val weather: StateFlow<Weather?> = _weather  // Expose as read-only
 
     // Holds the location name string shown in UI
-    private val _location = MutableStateFlow("Loading...")
+    private val _location = MutableStateFlow("Halifax, Nova Scotia")
     val location: StateFlow<String> = _location  // Read-only to outside
 
     // Retrofit setup to connect to the WeatherAPI service

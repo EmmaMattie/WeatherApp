@@ -3,8 +3,8 @@ package com.example.weatherapp.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,7 +27,7 @@ fun CurrentWeatherScreen(weather: Weather?) {
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("Loading...", fontSize = 24.sp, color = Color.White)
+            Text("Loading...", fontSize = 20.sp, color = Color.White)
         }
         return
     }
@@ -35,17 +35,14 @@ fun CurrentWeatherScreen(weather: Weather?) {
     val conditionText = weather.current.condition.text
 
     // Pick background image based on weather condition text
+    // Pick background image based on weather condition text
     val backgroundImage = when {
-        conditionText.contains("Sunny", ignoreCase = true) -> R.drawable.sunny_background
-        conditionText.contains("Cloud", ignoreCase = true) || conditionText.contains("Overcast", ignoreCase = true) -> R.drawable.cloudy_background
-        conditionText.contains("Rain", ignoreCase = true) -> R.drawable.rainy_background
+        conditionText.contains("Thunder", ignoreCase = true) || conditionText.contains("Storm", ignoreCase = true) -> R.drawable.thunderstorm_background
         conditionText.contains("Snow", ignoreCase = true) -> R.drawable.snow_background
-        // For fog or mist conditions, show fog background
-        conditionText.contains("Fog", ignoreCase = true) || conditionText.contains(
-            "Mist",
-            ignoreCase = true
-        ) -> R.drawable.fog_background
-
+        conditionText.contains("Rain", ignoreCase = true) -> R.drawable.rainy_background
+        conditionText.contains("Fog", ignoreCase = true) || conditionText.contains("Mist", ignoreCase = true) -> R.drawable.fog_background
+        conditionText.contains("Cloud", ignoreCase = true) || conditionText.contains("Overcast", ignoreCase = true) -> R.drawable.cloudy_background
+        conditionText.contains("Sunny", ignoreCase = true) -> R.drawable.sunny_background
         else -> R.drawable.sunny_background // Default background
     }
 
@@ -55,11 +52,7 @@ fun CurrentWeatherScreen(weather: Weather?) {
         conditionText.contains("Cloud", ignoreCase = true) || conditionText.contains("Overcast", ignoreCase = true) -> R.drawable.cloudy
         conditionText.contains("Rain", ignoreCase = true) -> R.drawable.rainy
         conditionText.contains("Snow", ignoreCase = true) -> R.drawable.snow
-        conditionText.contains("Fog", ignoreCase = true) || conditionText.contains(
-            "Mist",
-            ignoreCase = true
-        ) -> R.drawable.fog
-
+        conditionText.contains("Fog", ignoreCase = true) || conditionText.contains("Mist", ignoreCase = true) -> R.drawable.fog
         conditionText.contains("Thunder", ignoreCase = true) -> R.drawable.thunderstorm
         else -> R.drawable.sunny // Default icon
     }
@@ -73,139 +66,88 @@ fun CurrentWeatherScreen(weather: Weather?) {
             contentScale = ContentScale.Crop // Crop image to fill the space
         )
 
-        // Main content column that scrolls vertically with padding
+        // Main scrollable column with weather content
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()) // Enable scrolling if content is large
-                .padding(16.dp) // Add padding around content
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Row showing weather icon and temperature info side by side
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.Start
+            // Weather icon image
+            Image(
+                painter = painterResource(id = iconId),
+                contentDescription = "Weather Icon",
+                modifier = Modifier.size(100.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Location name
+            Text(
+                "Halifax",
+                fontSize = 28.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+
+            // Current temperature
+            Text(
+                "${weather.current.temperatureCelsius}°C",
+                fontSize = 44.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+
+            // Condition text
+            Text(
+                conditionText,
+                fontSize = 22.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Medium
+            )
+
+            // High and Low temperatures
+            Text(
+                "H: ${weather.forecast.forecastday[0].day.maxTemperatureCelsius}°  L: ${weather.forecast.forecastday[0].day.minTemperatureCelsius}°",
+                fontSize = 22.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Medium
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Individual cards for each weather metric
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Weather icon image
-                Image(
-                    painter = painterResource(id = iconId),
-                    contentDescription = "Weather Icon",
-                    modifier = Modifier.size(100.dp)
+                WeatherInfoCard("Wind Direction", weather.current.windDirection)
+                WeatherInfoCard("Wind Speed", "${weather.current.windSpeedKph} km/h")
+                WeatherInfoCard("Humidity", "${weather.current.humidity}%")
+                WeatherInfoCard("Precipitation", "${weather.current.precipitationMillimeters} mm")
+                WeatherInfoCard(
+                    "Chance of Precipitation",
+                    "${weather.forecast.forecastday[0].day.dailyChanceOfRain}%"
                 )
-                Spacer(Modifier.width(16.dp)) // Space between icon and text
-
-                // Column showing location and temperature
-                Column {
-                    Text(
-                        "Halifax", // Fixed location name
-                        fontSize = 30.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.height(8.dp)) // Space between location and temperature
-                    Text(
-                        "${weather.current.temperatureCelsius}°C", // Current temperature value
-                        fontSize = 48.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
+        }
+    }
+}
 
-            Spacer(Modifier.height(4.dp)) // Small vertical space
-
-            // Row showing condition description and high/low temperature for the day
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(12.dp),
-                horizontalArrangement = Arrangement.Start
-            ) {
-                Column {
-                    // Text showing current weather condition
-                    Text(
-                        conditionText,
-                        fontSize = 30.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.height(4.dp)) // Space below condition text
-
-                    // Text showing the high and low temperatures for the day
-                    Text(
-                        "H: ${weather.forecast.forecastday[0].day.maxTemperatureCelsius}°  L: ${weather.forecast.forecastday[0].day.minTemperatureCelsius}°",
-                        fontSize = 30.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp)) // Larger space before additional details
-
-            // Gray background surface showing extra weather details
-            Surface(
-                modifier = Modifier.padding(4.dp),
-                color = Color.Gray,
-                shape = MaterialTheme.shapes.medium // Rounded corners shape
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    // Row for wind direction and speed info
-                    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
-                        Column {
-                            Text("Wind Direction", fontSize = 26.sp, color = Color.White)
-                            Text(
-                                weather.current.windDirection,
-                                fontSize = 23.sp,
-                                color = Color.White
-                            )
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text("Wind Speed", fontSize = 26.sp, color = Color.White)
-                            Text(
-                                "${weather.current.windSpeedKph} km/h",
-                                fontSize = 23.sp,
-                                color = Color.White
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(16.dp)) // Space between rows
-
-                    // Row for humidity and precipitation amount
-                    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
-                        Column {
-                            Text("Humidity", fontSize = 26.sp, color = Color.White)
-                            Text(
-                                "${weather.current.humidity}%",
-                                fontSize = 23.sp,
-                                color = Color.White
-                            )
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text("Precipitation", fontSize = 26.sp, color = Color.White)
-                            Text(
-                                "${weather.current.precipitationMillimeters} mm",
-                                fontSize = 23.sp,
-                                color = Color.White
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(16.dp)) // Space between rows
-
-                    // Row for chance of precipitation
-                    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
-                        Column {
-                            Text("Chance of Precipitation", fontSize = 26.sp, color = Color.White)
-                            Text(
-                                "${weather.forecast.forecastday[0].day.dailyChanceOfRain}%",
-                                fontSize = 22.sp,
-                                color = Color.White
-                            )
-                        }
-                        Column { // Empty column for spacing }
-                        }
-                    }
-                }
-            }
+// Composable function to display a styled info box with label and value
+@Composable
+fun WeatherInfoCard(label: String, value: String) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth(),
+        color = Color(0xAA444444), // semi-transparent gray
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(label, fontSize = 16.sp, color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text(value, fontSize = 16.sp, color = Color.White)
         }
     }
 }

@@ -93,8 +93,6 @@ class MainActivity : ComponentActivity() {
         ) {
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 location?.let {
-                    // Get latitude, longitude as "lat,lng" string
-                    val latLng = "${it.latitude},${it.longitude}"
                     // Fetch weather for this location from API
                     viewModel.fetchWeatherByLocation("Halifax")  // Use fixed city name for consistent forecast data
                     // Update location text shown in UI
@@ -112,7 +110,7 @@ fun DisplayUI(viewModel: MainViewModel) {
     val navController = rememberNavController()
 
     // Collect current location string from ViewModel
-    val location by viewModel.location.collectAsState(initial = "Loading...")
+    val location by viewModel.location.collectAsState()
 
     // Collect current weather data from ViewModel
     val weather by viewModel.weather.collectAsState(initial = null)
@@ -123,26 +121,16 @@ fun DisplayUI(viewModel: MainViewModel) {
             TopAppBar(
                 title = {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 140.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = location,
-                            fontSize = 32.sp,
+                            fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.align(Alignment.CenterStart)
+                            color = Color.White
                         )
                     }
-                },
-                navigationIcon = {
-                    Text(
-                        text = "WeatherApp",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier.padding(start = 16.dp)
-                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Gray)
             )
